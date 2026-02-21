@@ -1,64 +1,213 @@
-<!DOCTYPE html><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>我的數位聯絡簿</title>
+    <title>我的開學全能助手</title>
     <style>
-        body { font-family: sans-serif; background: ##fff0f5; padding: 20px; display: flex; justify-content: center; }
-        .container { background: white; width: 100%; max-width: 400px; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        h2 { color: #1a73e8; text-align: center; }
-        textarea { width: 100%; height: 100px; padding: 10px; box-sizing: border-box; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; margin-bottom: 10px; }
-        button { width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s; }
-        .save-btn { background: #1a73e8; color: white; margin-bottom: 10px; }
-        .clear-btn { background: #ff4d4d; color: white; }
-        .status { text-align: center; color: #666; font-size: 14px; margin-top: 10px; }
+        :root { --poya-pink: #ff4757; --poya-blue: #3498db; --nav-bg: #2d3436; }
+        body { font-family: sans-serif; background: #f8f9fa; margin: 0; padding-bottom: 30px; }
+        
+        /* 頂部導覽列 */
+        .nav-bar { background: var(--nav-bg); padding: 10px; display: flex; justify-content: center; gap: 15px; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .nav-btn { background: #636e72; color: white; border: none; padding: 10px 25px; border-radius: 20px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .nav-btn.active { background: var(--poya-pink); }
+
+        /* 切換區塊控制 */
+        .app-section { display: none; padding: 15px; }
+        .app-section.active { display: block; }
+
+        /* --- 聯絡簿樣式 --- */
+        .contact-card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .contact-textarea { width: 100%; border: 1px solid #ddd; border-radius: 10px; padding: 15px; font-size: 1rem; box-sizing: border-box; resize: none; margin-top: 10px; }
+        .save-hint { color: #2ecc71; font-size: 0.8rem; margin-top: 5px; text-align: right; }
+
+        /* --- 商城樣式 --- */
+        .stats-row { display: flex; justify-content: space-around; margin: 15px 0; }
+        .stat-item { font-size: 0.8rem; font-weight: bold; background: #f1f2f6; padding: 5px 10px; border-radius: 15px; border: 1px solid #ddd; }
+        .money-display { font-size: 1.6rem; color: #2ecc71; font-weight: bold; text-align: center; margin: 10px 0; }
+        
+        .tab-bar { display: flex; overflow-x: auto; background: white; padding: 8px 0; margin: 10px -15px; padding-left: 15px; border-bottom: 1px solid #eee; }
+        .shop-tab { padding: 8px 15px; margin-right: 8px; border-radius: 20px; background: #eee; font-size: 0.8rem; border: none; flex-shrink: 0; }
+        .shop-tab.active { background: var(--poya-blue); color: white; }
+
+        .shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .item-card { background: white; padding: 12px; border-radius: 12px; border: 1px solid #eee; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .item-name { font-weight: bold; font-size: 0.85rem; height: 2.5em; overflow: hidden; }
+        .item-price { color: var(--poya-pink); font-weight: bold; margin: 5px 0; }
+        
+        .buy-btn { background: var(--poya-blue); color: white; border: none; padding: 8px; border-radius: 6px; font-size: 0.8rem; cursor: pointer; }
+        .buy-btn:disabled { background: #ccc; }
+
+        .inventory-section { background: white; padding: 15px; border-radius: 12px; margin-top: 15px; border: 2px dashed var(--poya-blue); }
+        .bag-item { display: inline-flex; align-items: center; background: #e8f4fd; padding: 5px 10px; margin: 3px; border-radius: 5px; font-size: 0.8rem; }
+        .use-btn { background: #2ecc71; color: white; border: none; padding: 2px 6px; border-radius: 4px; margin-left: 5px; cursor: pointer; }
+
+        .work-btn { background: #f1c40f; color: #333; padding: 15px; width: 100%; border: none; border-radius: 12px; font-weight: bold; margin: 15px 0; font-size: 1.1rem; box-shadow: 0 4px 0 #d4ac0d; cursor: pointer; }
+        .work-btn:active { transform: translateY(2px); box-shadow: 0 0 0; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2>📅 課業記本</h2>
-    <p><b>今日作業與考試：</b></p>
-    <textarea id="homeworkInput" placeholder="例如：
-- 數學課本 P.10
-- 明天英文小考第一課
-- 帶泳衣"></textarea>
-    
-    <button class="save-btn" onclick="saveData()">💾 儲存內容</button>
-    <button class="clear-btn" onclick="clearData()">🗑️ 全部清除</button>
-    
-    <div id="statusMsg" class="status"></div>
+<div class="nav-bar">
+    <button id="navContact" class="nav-btn active" onclick="switchMainApp('contact')">📝 聯絡簿</button>
+    <button id="navShop" class="nav-btn" onclick="switchMainApp('shop')">🏪 數位寶雅</button>
+</div>
+
+<div id="contactSection" class="app-section active">
+    <div class="contact-card">
+        <h3 style="margin-top:0;">📅 今日備忘錄</h3>
+        <p style="font-size:0.8rem; color:#666;">內容會自動儲存在這台手機中</p>
+        <textarea id="memoInput" class="contact-textarea" rows="12" placeholder="在此輸入作業、考試或待辦事項..."></textarea>
+        <div class="save-hint">✓ 已自動儲存</div>
+    </div>
+</div>
+
+<div id="shopSection" class="app-section">
+    <div class="money-display">💰 $<span id="balance">0</span></div>
+    <div class="stats-row">
+        <div class="stat-item">✨ 顏值: <span id="beautyStat">0</span></div>
+        <div class="stat-item">🍔 飽食: <span id="fullStat">100</span></div>
+        <div class="stat-item">📈 秒產: $<span id="incomeVal">0</span></div>
+    </div>
+
+    <button class="work-btn" onclick="work()">🖐️ 努力打工賺錢 (+$10)</button>
+
+    <div class="tab-bar">
+        <button class="shop-tab active" onclick="switchShopTab('保養')">🧼 臉部保養</button>
+        <button class="shop-tab" onclick="switchShopTab('美妝')">💄 彩妝區</button>
+        <button class="shop-tab" onclick="switchShopTab('食品')">🥤 零食飲品</button>
+        <button class="shop-tab" onclick="switchShopTab('投資')">🏛️ 產金投資</button>
+    </div>
+
+    <div class="shop-grid" id="shopGrid"></div>
+
+    <div class="inventory-section">
+        <b>🎒 我的背包：</b>
+        <div id="bagDisplay" style="margin-top:10px; font-size:0.9rem;">空空的</div>
+    </div>
 </div>
 
 <script>
-    // 網頁開啟時，自動讀取之前存過的資料
-    window.onload = function() {
-        const savedData = localStorage.getItem('myHomework');
-        if (savedData) {
-            document.getElementById('homeworkInput').value = savedData;
-        }
+    // --- 資料初始化 ---
+    let memo = localStorage.getItem('my_memo') || "";
+    let money = parseInt(localStorage.getItem('game_money')) || 0;
+    let autoIncome = parseInt(localStorage.getItem('game_income')) || 0;
+    let beauty = parseInt(localStorage.getItem('game_beauty')) || 0;
+    let fullness = parseInt(localStorage.getItem('game_fullness')) || 100;
+    let bag = JSON.parse(localStorage.getItem('game_bag')) || [];
+    let currentShopTab = '保養';
+
+    const products = {
+        '保養': [
+            { name: "雪芙蘭嫩白化妝水", price: 199, effect: { type: 'beauty', val: 5 } },
+            { name: "曼秀雷敦調理水", price: 220, effect: { type: 'beauty', val: 6 } },
+            { name: "抗痘控油洗顏慕斯", price: 180, effect: { type: 'beauty', val: 5 } },
+            { name: "Nature Face 噴霧", price: 150, effect: { type: 'beauty', val: 4 } },
+            { name: "Bioré 小蒼蘭防曬", price: 280, effect: { type: 'beauty', val: 7 } }
+        ],
+        '美妝': [
+            { name: "惹我清爽蜜粉", price: 160, effect: { type: 'beauty', val: 12 } },
+            { name: "韓系絲絨口紅", price: 450, effect: { type: 'beauty', val: 25 } },
+            { name: "九宮格大地色眼影", price: 580, effect: { type: 'beauty', val: 35 } }
+        ],
+        '食品': [
+            { name: "珍珠奶茶", price: 65, effect: { type: 'full', val: 25 } },
+            { name: "咔辣姆久大包", price: 45, effect: { type: 'full', val: 15 } },
+            { name: "辛拉麵", price: 160, effect: { type: 'full', val: 60 } }
+        ],
+        '投資': [
+            { name: "自動小助手", price: 1000, income: 10 },
+            { name: "數位寶雅分店", price: 10000, income: 85 },
+            { name: "宇宙物流中心", price: 50000, income: 500 }
+        ]
     };
 
-    // 儲存資料到手機瀏覽器
-    function saveData() {
-        const content = document.getElementById('homeworkInput').value;
-        localStorage.setItem('myHomework', content);
-        const msg = document.getElementById('statusMsg');
-        msg.innerText = "✅ 已儲存！下次打開還會在喔。";
-        setTimeout(() => msg.innerText = "", 2000);
+    // --- 核心邏輯 ---
+    function switchMainApp(app) {
+        document.getElementById('contactSection').classList.toggle('active', app === 'contact');
+        document.getElementById('shopSection').classList.toggle('active', app === 'shop');
+        document.getElementById('navContact').classList.toggle('active', app === 'contact');
+        document.getElementById('navShop').classList.toggle('active', app === 'shop');
     }
 
-    // 清除所有資料
-    function clearData() {
-        if (confirm("確定要清除所有紀錄嗎？")) {
-            localStorage.removeItem('myHomework');
-            document.getElementById('homeworkInput').value = "";
-            document.getElementById('statusMsg').innerText = "🧹 已清空。";
+    // 聯絡簿存檔
+    document.getElementById('memoInput').value = memo;
+    document.getElementById('memoInput').addEventListener('input', (e) => {
+        localStorage.setItem('my_memo', e.target.value);
+    });
+
+    // 商城產金
+    setInterval(() => {
+        money += autoIncome;
+        if (fullness > 0) fullness = Math.max(0, fullness - 0.1);
+        updateShopUI();
+    }, 1000);
+
+    function updateShopUI() {
+        document.getElementById('balance').innerText = money.toLocaleString();
+        document.getElementById('incomeVal').innerText = autoIncome;
+        document.getElementById('beautyStat').innerText = Math.floor(beauty);
+        document.getElementById('fullStat').innerText = Math.floor(fullness);
+        
+        const grid = document.getElementById('shopGrid');
+        grid.innerHTML = '';
+        products[currentShopTab].forEach((p, idx) => {
+            const canAfford = money >= p.price;
+            grid.innerHTML += `
+                <div class="item-card">
+                    <div class="item-name">${p.name}</div>
+                    <div style="font-size:0.7rem; color:#888">${p.income ? '+$'+p.income+'/s' : '效果:+'+p.effect.val}</div>
+                    <div class="item-price">$${p.price}</div>
+                    <button class="buy-btn" ${canAfford ? '' : 'disabled'} onclick="buyItem('${currentShopTab}', ${idx})">購買</button>
+                </div>
+            `;
+        });
+
+        const bagDiv = document.getElementById('bagDisplay');
+        bagDiv.innerHTML = bag.length ? '' : '空空的';
+        bag.forEach((item, idx) => {
+            bagDiv.innerHTML += `
+                <span class="bag-item">${item.name} <button class="use-btn" onclick="useItem(${idx})">用</button></span>
+            `;
+        });
+        saveGame();
+    }
+
+    function buyItem(tab, idx) {
+        const p = products[tab][idx];
+        if (money >= p.price) {
+            money -= p.price;
+            if (p.income) autoIncome += p.income;
+            else bag.push(p);
+            updateShopUI();
         }
     }
-</script>
 
+    function useItem(idx) {
+        const item = bag[idx];
+        if (item.effect.type === 'beauty') beauty += item.effect.val;
+        if (item.effect.type === 'full') fullness += item.effect.val;
+        bag.splice(idx, 1);
+        updateShopUI();
+    }
+
+    function switchShopTab(t) {
+        currentShopTab = t;
+        document.querySelectorAll('.shop-tab').forEach(btn => btn.classList.toggle('active', btn.innerText.includes(t)));
+        updateShopUI();
+    }
+
+    function work() { money += 10; updateShopUI(); }
+    function saveGame() {
+        localStorage.setItem('game_money', money);
+        localStorage.setItem('game_income', autoIncome);
+        localStorage.setItem('game_beauty', beauty);
+        localStorage.setItem('game_fullness', fullness);
+        localStorage.setItem('game_bag', JSON.stringify(bag));
+    }
+
+    updateShopUI();
+</script>
 </body>
 </html>
-
