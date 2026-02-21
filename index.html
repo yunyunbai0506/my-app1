@@ -1,132 +1,150 @@
-\<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>會考戰士：神奇補給站 v1.4</title>
+    <title>會考戰士：神奇補給總部 v1.8.1</title>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background-color: #f4f4f9; padding: 20px; }
         .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         h1, h2 { color: #333; text-align: center; }
-        
-        /* 數值面板 */
-        .stats { display: flex; justify-content: space-around; background: #eee; padding: 15px; border-radius: 10px; margin-bottom: 20px; font-weight: bold; }
-        
-        /* 選單按鈕 */
+        .stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; background: #eee; padding: 15px; border-radius: 10px; margin-bottom: 20px; font-weight: bold; text-align: center; }
         .menu { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; justify-content: center; }
         button { padding: 10px 15px; cursor: pointer; border: none; border-radius: 8px; background: #6c5ce7; color: white; transition: 0.3s; }
         button:hover { background: #a29bfe; }
-        
         .section { display: none; }
         .active { display: block; }
-        
-        /* 商店項目 */
         .item-card { border: 1px solid #ddd; padding: 12px; margin: 10px 0; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
-        .tag { font-size: 0.75em; padding: 2px 6px; border-radius: 4px; color: white; margin-left: 5px; }
-        .tag-skin { background: #55efc4; color: #000; } /* 純保養 */
-        .tag-makeup { background: #fd79a8; } /* 彩妝/需卸妝 */
-        
-        /* 狀態訊息 */
-        .status-msg { color: #e74c3c; font-weight: bold; text-align: center; height: 1.5em; margin-bottom: 10px; }
-        
-        /* 更新日誌彈窗 */
+        .tag-food { background: #fab1a0; color: #d63031; font-size: 0.75em; padding: 2px 6px; border-radius: 4px; margin-left: 5px; }
+        .status-msg { color: #e74c3c; font-weight: bold; text-align: center; min-height: 1.5em; margin-bottom: 10px; }
         #updateModal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border: 2px solid #6c5ce7; border-radius: 10px; z-index: 1000; box-shadow: 0 0 20px rgba(0,0,0,0.5); width: 80%; }
         #overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.3); z-index: 999; }
+        .auto-panel { background: #fffbe6; padding: 15px; border-radius: 10px; margin-top: 15px; border: 1px solid #ffe58f; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>補給站總部</h1>
-    
-    <div id="status-display" class="status-msg">歡迎店長！</div>
+    <h1 id="shop-name">神奇補給總部</h1>
+    <div id="status-display" class="status-msg">系統初始化中...</div>
 
     <div class="stats">
-        <div>💰 金幣: <span id="money">500</span></div>
-        <div>✨ 顏值: <span id="beauty">80</span>/100</div>
-        <div>🍔 飽食: <span id="hunger">70</span>/100</div>
+        <div>💰 金幣<br><span id="money">500</span></div>
+        <div>✨ 顏值<br><span id="beauty">80</span>/100</div>
+        <div>🍔 飽食<br><span id="hunger">70</span>/100</div>
     </div>
 
     <div class="menu">
-        <button onclick="showSection('work')">打工賺錢</button>
+        <button onclick="showSection('work')">賺錢中心</button>
         <button onclick="showSection('diary')">聯絡簿</button>
         <button onclick="showSection('shop')">商店</button>
         <button onclick="toggleUpdateModal()">✨ 更新日誌</button>
+        <button onclick="clearSave()" style="background:#e74c3c">重置存檔</button>
     </div>
 
-    <div id="work" class="section active" style="text-align:center; padding: 20px;">
-        <h3>努力打工中...</h3>
-        <button onclick="clickWork()" style="padding: 20px; font-size: 1.2em; background: #ff7675;">點擊賺取 10 金幣</button>
+    <div id="work" class="section active" style="text-align:center;">
+        <div style="padding: 20px;">
+            <button onclick="clickWork()" style="padding: 20px; font-size: 1.2em; background: #ff7675; width: 100%; font-weight: bold;">手動打工 (點擊 +10, 飽食 -1)</button>
+        </div>
+        <div class="auto-panel">
+            <h3>🤖 自動化設施</h3>
+            <div class="item-card"><span>聘僱工讀生 (每秒 +1)</span><button onclick="buyAuto('helper', 300)">$300</button></div>
+            <div class="item-card"><span>自動結帳機 (每秒 +5)</span><button onclick="buyAuto('machine', 1000)">$1000</button></div>
+        </div>
     </div>
 
     <div id="diary" class="section">
         <h2>今日聯絡簿</h2>
-        <textarea id="diary-box" style="width:100%; height:100px;" placeholder="寫下心情..."></textarea>
-        <button onclick="alert('存檔成功！')">儲存備忘</button>
+        <textarea id="diary-box" style="width:100%; height:150px; border-radius:10px; padding:10px;" placeholder="寫下明天的規劃..."></textarea>
     </div>
 
     <div id="shop" class="section">
         <h2>神奇商店</h2>
-        <div class="item-card">
-            <span>💄 魅惑口紅 <span class="tag tag-makeup">彩妝</span></span>
-            <button onclick="buy('口紅', 200, 15, true)">$200</button>
-        </div>
-        <div class="item-card">
-            <span>👁️ 大地色眼影盤 <span class="tag tag-makeup">彩妝</span></span>
-            <button onclick="buy('眼影', 300, 20, true)">$300</button>
-        </div>
-        <div class="item-card">
-            <span>✨ 惹我蜜粉 <span class="tag tag-makeup">化妝</span></span>
-            <button onclick="buy('蜜粉', 160, 10, true)">$160</button>
-        </div>
-        <div class="item-card">
-            <span>☀️ Bioré 防曬噴霧 <span class="tag tag-makeup">防曬</span></span>
-            <button onclick="buy('防曬', 180, 5, true)">$180</button>
-        </div>
-        <div class="item-card">
-            <span>🧪 曼秀雷敦調理水/化妝水 <span class="tag tag-skin">保養</span></span>
-            <button onclick="buy('保養水', 120, 8, false)">$120</button>
-        </div>
-        <div class="item-card">
-            <span>🌿 Nature Face 噴霧 <span class="tag tag-skin">保養</span></span>
-            <button onclick="buy('噴霧', 150, 8, false)">$150</button>
-        </div>
-        <div class="item-card">
-            <span>🧼 雪芙蘭卸妝水 (清潔妝容)</span>
-            <button onclick="buy('卸妝', 150, 0, false)">$150</button>
-        </div>
-        <div class="item-card">
-            <span>💊 可立信痘痘凝膠 (治痘專用)</span>
-            <button onclick="buy('痘痘膏', 200, 0, false)">$200</button>
-        </div>
+        <h3 style="border-left: 5px solid #fab1a0; padding-left: 10px;">🍞 美食街</h3>
+        <div class="item-card"><span>應急吐司 <span class="tag-food">飽食+20</span></span><button onclick="eat('吐司', 50, 20)">$50</button></div>
+        <div class="item-card"><span>能量飲料 <span class="tag-food">飽食+40</span></span><button onclick="eat('飲料', 120, 40)">$120</button></div>
+        
+        <h3 style="border-left: 5px solid #6c5ce7; padding-left: 10px; margin-top:20px;">💄 美妝保養</h3>
+        <div class="item-card"><span>魅惑口紅 (需卸妝)</span><button onclick="buy('口紅', 200, 15, true)">$200</button></div>
+        <div class="item-card"><span>曼秀雷敦調理水</span><button onclick="buy('調理水', 120, 8, false)">$120</button></div>
+        <div class="item-card"><span>雪芙蘭卸妝水</span><button onclick="buy('卸妝', 150, 0, false)">$150</button></div>
+        <div class="item-card"><span>可立信痘痘凝膠</span><button onclick="buy('痘痘膏', 200, 0, false)">$200</button></div>
     </div>
 </div>
 
 <div id="overlay" onclick="toggleUpdateModal()"></div>
 <div id="updateModal">
-    <h3>🚀 v1.4 更新紀錄</h3>
+    <h3>🚀 v1.8.1 邏輯校對版</h3>
     <hr>
     <ul>
-        <li>[正名] 將商店從「寶雅」改為通用名稱「商店」。</li>
-        <li>[新增] 彩妝系列：包含口紅、眼影盤。</li>
-        <li>[邏輯] 帶妝切換分頁有機率長痘，需用卸妝水預防或痘痘膏治療。</li>
-        <li>[修正] 數值上限固定為 100。</li>
-        <li>[優化] 加入更新日誌視窗功能。</li>
+        <li>[校正] 修正飽食度顯示小數點的問題。</li>
+        <li>[校正] 強化 LocalStorage 存檔讀取順序。</li>
+        <li>[功能] 飽食度歸零每秒扣 1 顏值，打工需消耗飽食。</li>
+        <li>[功能] 自動賺錢在切換分頁時依然有效。</li>
     </ul>
     <button onclick="toggleUpdateModal()">關閉</button>
 </div>
 
 <script>
-    let money = 500;
-    let beauty = 80;
-    let hunger = 70;
-    let isDirty = false; // 是否帶妝
-    let hasAcne = false; // 是否有痘痘
+    // 預設初始狀態
+    let state = {
+        money: 500,
+        beauty: 80,
+        hunger: 70,
+        autoIncome: 0,
+        isDirty: false,
+        hasAcne: false
+    };
+
     const max = 100;
 
+    // --- 核心功能：存檔/讀檔 ---
+    function saveGame() {
+        localStorage.setItem('magicShopSave_v1', JSON.stringify(state));
+    }
+
+    function loadGame() {
+        const savedData = localStorage.getItem('magicShopSave_v1');
+        if (savedData) {
+            try {
+                const parsed = JSON.parse(savedData);
+                state = Object.assign(state, parsed); // 合併數據確保完整
+                updateUI("歡迎回來，進度已載入。");
+            } catch (e) {
+                console.error("讀檔失敗");
+            }
+        }
+    }
+
+    function clearSave() {
+        if(confirm("確定要重置所有數據嗎？")) {
+            localStorage.removeItem('magicShopSave_v1');
+            location.reload();
+        }
+    }
+
+    // --- 核心功能：定時器 (每一秒執行一次) ---
+    setInterval(() => {
+        // 1. 自動收入
+        state.money += state.autoIncome;
+        
+        // 2. 自動飢餓 (每秒 -0.5)
+        if (state.hunger > 0) {
+            state.hunger -= 0.5;
+        } else {
+            // 3. 飢餓懲罰：每秒 -1 顏值
+            state.beauty = Math.max(0, state.beauty - 1);
+        }
+        
+        saveGame();
+        updateUI();
+    }, 1000);
+
+    // --- 介面切換 ---
     function showSection(id) {
         document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
         document.getElementById(id).classList.add('active');
-        if (isDirty) checkAcneRisk(); // 切換分頁時檢查卸妝
+        // 只有帶妝時切換分頁才會有機率長痘
+        if (state.isDirty) checkAcneRisk();
     }
 
     function toggleUpdateModal() {
@@ -137,49 +155,83 @@
         o.style.display = isShow ? 'none' : 'block';
     }
 
+    // --- 遊戲動作 ---
     function clickWork() {
-        money += 10;
-        updateUI("努力打工賺到了 10 金幣！");
+        if (state.hunger < 1) {
+            alert("你已經餓昏了，沒辦法打工！快去美食街。");
+            return;
+        }
+        state.money += 10;
+        state.hunger = Math.max(0, state.hunger - 1);
+        saveGame();
+        updateUI("努力打工中 (+10💰, -1🍔)");
+    }
+
+    function buyAuto(type, price) {
+        if (state.money >= price) {
+            state.money -= price;
+            state.autoIncome += (type === 'helper' ? 1 : 5);
+            saveGame();
+            updateUI("設備升級成功！");
+        } else alert("金幣不足，無法購買自動化設備。");
+    }
+
+    function eat(name, price, gain) {
+        if (state.money < price) { alert("你太窮了，買不起這頓飯。"); return; }
+        if (state.hunger >= max) { alert("你已經飽到吃不下了。"); return; }
+        state.money -= price;
+        state.hunger = Math.min(max, state.hunger + gain);
+        saveGame();
+        updateUI("享用了" + name + "，飽食度上升！");
     }
 
     function buy(name, price, gain, makeup) {
-        if (money < price) { alert("金幣不足，快去打工！"); return; }
+        if (state.money < price) { alert("錢不夠喔！"); return; }
         
         if (name === '卸妝') {
-            money -= price; isDirty = false;
-            updateUI("卸妝完成，皮膚很清爽！");
+            state.money -= price;
+            state.isDirty = false;
+            updateUI("妝容卸除乾淨了，皮膚好舒服！");
         } else if (name === '痘痘膏') {
-            if (hasAcne) {
-                money -= price; hasAcne = false;
-                beauty = Math.min(max, beauty + 15);
-                updateUI("擦了痘痘膏，紅腫消退了！");
-            } else { alert("臉上沒痘痘，不用擦藥喔。"); }
+            if (state.hasAcne) {
+                state.money -= price;
+                state.hasAcne = false;
+                state.beauty = Math.min(max, state.beauty + 15);
+                updateUI("擦了藥，痘痘慢慢消失了。");
+            } else alert("你臉上很乾淨，不需要擦藥。");
         } else {
-            money -= price;
-            beauty = Math.min(max, beauty + gain);
-            if (makeup) isDirty = true;
+            state.money -= price;
+            state.beauty = Math.min(max, state.beauty + gain);
+            if (makeup) state.isDirty = true;
             updateUI("使用了 " + name + (makeup ? " (記得卸妝)" : ""));
         }
+        saveGame();
     }
 
     function checkAcneRisk() {
-        if (isDirty && Math.random() < 0.2) { // 20% 機率
-            hasAcne = true;
-            beauty = Math.max(0, beauty - 10);
-            document.getElementById('status-display').innerText = "⚠️ 妝沒卸乾淨，長痘痘了！";
+        if (state.isDirty && Math.random() < 0.2) {
+            state.hasAcne = true;
+            state.beauty = Math.max(0, state.beauty - 10);
+            updateUI("⚠️ 沒卸妝就跑來跑去，長痘痘了！");
         }
     }
 
     function updateUI(msg) {
-        document.getElementById('money').innerText = money;
-        document.getElementById('beauty').innerText = beauty;
-        document.getElementById('hunger').innerText = hunger;
-        if (msg) document.getElementById('status-display').innerText = msg;
-        if (hasAcne) document.getElementById('status-display').innerText += " [⚠️ 痘痘中]";
+        // 顯示時使用 Math.floor 避免小數點亂跑
+        document.getElementById('money').innerText = Math.floor(state.money);
+        document.getElementById('beauty').innerText = Math.floor(state.beauty);
+        document.getElementById('hunger').innerText = Math.floor(state.hunger);
+        
+        let statusText = msg || `自動產金中：${state.autoIncome}/秒`;
+        if (state.hunger <= 0) statusText = "❗ 警告：飢餓過度，顏值持續下降中！";
+        
+        document.getElementById('status-display').innerText = statusText;
+        if (state.hasAcne) document.getElementById('status-display').innerText += " [🦠 痘痘中]";
     }
 
-    updateUI(); // 初始更新
+    // 初始化載入
+    loadGame();
+    updateUI();
 </script>
-
 </body>
 </html>
