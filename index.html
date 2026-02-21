@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>會考戰士：神奇補給總部 v3.1 終極版</title>
+    <title>會考戰士：神奇補給總部 v3.2 自動賺錢版</title>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background-color: #f4f4f9; padding: 20px; line-height: 1.6; }
         .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
@@ -18,6 +18,7 @@
         .tag-food { background: #ff7675; }
         .tag-skin { background: #55efc4; color: #000; }
         .tag-makeup { background: #fdcb6e; color: #000; }
+        .tag-auto { background: #0984e3; }
         .status-msg { color: #e74c3c; font-weight: bold; text-align: center; min-height: 1.5em; margin-bottom: 10px; font-size: 0.9em; }
         .author-note { background: #e8f4fd; border-left: 5px solid #3498db; padding: 15px; margin-bottom: 15px; border-radius: 5px; position: relative; }
         textarea { width: 100%; height: 150px; padding: 10px; border-radius: 10px; border: 1px solid #ddd; resize: none; box-sizing: border-box; }
@@ -49,7 +50,7 @@
     </div>
 
     <div style="text-align:center; font-size:0.8em; margin-bottom:10px; background:#f1f2f6; padding:5px; border-radius:20px;">
-        🚿 <span id="last-wash-display">--</span> | 🧴 皮膚：<span id="skin-status-display">良好</span>
+        🚿 <span id="last-wash-display">--</span> | 🧴 皮膚：<span id="skin-status-display">良好</span> | 🤖 自動：<span id="auto-count-display">0</span>
     </div>
 
     <div class="menu">
@@ -70,17 +71,16 @@
     <div id="shop" class="section">
         <h3>🍱 食品供應區</h3>
         <div class="item-card"><span>應急吐司 <span class="tag tag-food">+20</span></span><button onclick="buyItem('應急吐司', 50, 'food', 20)">$50</button></div>
-        <div class="item-card"><span>御飯糰 <span class="tag tag-food">+35</span></span><button onclick="buyItem('御飯糰', 80, 'food', 35)">$80</button></div>
-        <div class="item-card"><span>珍珠奶茶 <span class="tag tag-food">飽食+15 顏值+10</span></span><button onclick="buyItem('珍珠奶茶', 100, 'food_plus', 15, 10)">$100</button></div>
+        <div class="item-card"><span>珍珠奶茶 <span class="tag tag-food">+10顏值</span></span><button onclick="buyItem('珍珠奶茶', 100, 'food_plus', 15, 10)">$100</button></div>
         <div class="item-card"><span>台式排骨飯 <span class="tag tag-food">+80</span></span><button onclick="buyItem('排骨飯', 250, 'food', 80)">$250</button></div>
         <hr>
-        <h3>💄 護膚與美妝區</h3>
-        <div class="item-card"><span>Nature Face 噴霧 <span class="tag tag-skin">保養</span></span><button onclick="buyItem('Nature Face 噴霧', 150, 'skin', 8)">$150</button></div>
-        <div class="item-card"><span>雪芙蘭化妝水 <span class="tag tag-skin">保養</span></span><button onclick="buyItem('雪芙蘭化妝水', 120, 'skin', 10)">$120</button></div>
-        <div class="item-card"><span>1028 睫毛膏 <span class="tag tag-makeup">需卸妝</span></span><button onclick="buyItem('1028睫毛膏', 280, 'makeup', 18)">$280</button></div>
-        <div class="item-card"><span>惹我蜜粉 <span class="tag tag-makeup">需卸妝</span></span><button onclick="buyItem('惹我蜜粉', 160, 'makeup', 15)">$160</button></div>
-        <div class="item-card"><span>雪芙蘭卸妝水 <span class="tag tag-skin">清潔</span></span><button onclick="buyItem('卸妝水', 150, 'clean', 0)">$150</button></div>
-        <div class="item-card"><span>可立信痘痘凝膠 <span class="tag tag-skin">治療</span></span><button onclick="buyItem('痘痘膏', 220, 'cure', 0)">$220</button></div>
+        <h3>💄 護膚美妝區</h3>
+        <div class="item-card"><span>Nature Face 噴霧</span><button onclick="buyItem('Nature Face 噴霧', 150, 'skin', 8)">$150</button></div>
+        <div class="item-card"><span>雪芙蘭卸妝水</span><button onclick="buyItem('卸妝水', 150, 'clean', 0)">$150</button></div>
+        <div class="item-card"><span>可立信痘痘凝膠</span><button onclick="buyItem('痘痘膏', 220, 'cure', 0)">$220</button></div>
+        <hr>
+        <h3>🤖 自動化設備</h3>
+        <div class="item-card"><span>自動賺錢機 <span class="tag tag-auto">每秒+$2</span></span><button onclick="buyAuto()">$1000</button></div>
     </div>
 
     <div id="inventory" class="section"><h3>🎒 背包</h3><div id="inventory-display"></div></div>
@@ -95,7 +95,8 @@
         money: 500, beauty: 80, hunger: 70, inventory: [], 
         lastCheckIn: "", authorNote: "歡迎回來，店長！", 
         diaryContent: "", hasReceivedGift: false,
-        lastWashTime: Date.now(), isDirty: false, hasAcne: false
+        lastWashTime: Date.now(), isDirty: false, hasAcne: false,
+        autoRobots: 0 // 新增屬性：自動機器人數量
     };
 
     function saveGame() { localStorage.setItem(SAVE_KEY, JSON.stringify(state)); }
@@ -108,27 +109,42 @@
     }
 
     setInterval(() => {
+        // 飽食與顏值自然損耗
         if (state.hunger > 0) state.hunger -= 0.05;
         let hoursSinceWash = (Date.now() - state.lastWashTime) / (1000 * 60 * 60);
         if (hoursSinceWash > 24) state.beauty = Math.max(0, state.beauty - 0.05);
         if (state.isDirty && Math.random() < 0.0006) state.hasAcne = true;
         if (state.hasAcne) state.beauty = Math.max(0, state.beauty - 0.02);
+        
+        // 🤖 自動賺錢邏輯
+        if (state.autoRobots > 0) {
+            state.money += (state.autoRobots * 2);
+        }
+
         saveGame(); updateUI();
     }, 1000);
 
     function buyItem(name, price, type, power, beautyPower = 0) {
-        if (state.money < price) { alert("金幣不足！"); return; }
+        if (state.money < price) { alert("錢不夠！"); return; }
         state.money -= price;
         state.inventory.push({ name, type, power, beautyPower });
         saveGame(); updateUI("購買了 " + name);
+    }
+
+    function buyAuto() {
+        let price = 1000;
+        if (state.money < price) { alert("自動機器人很貴的，錢不夠！"); return; }
+        state.money -= price;
+        state.autoRobots += 1;
+        saveGame(); updateUI("解鎖 1 台自動機器人！");
     }
 
     function useItem(index) {
         const item = state.inventory[index];
         if (item.type === 'food') state.hunger = Math.min(100, state.hunger + item.power);
         else if (item.type === 'food_plus') { state.hunger = Math.min(100, state.hunger + item.power); state.beauty = Math.min(100, state.beauty + item.beautyPower); }
-        else if (item.type === 'clean') { state.isDirty = false; updateUI("卸妝完成！"); }
-        else if (item.type === 'cure') { if(state.hasAcne){ state.hasAcne = false; state.beauty += 15; updateUI("痘痘好了！"); } else alert("沒長痘痘不用塗藥啦~"); }
+        else if (item.type === 'clean') { state.isDirty = false; }
+        else if (item.type === 'cure') { if(state.hasAcne){ state.hasAcne = false; state.beauty += 15; } }
         else { state.beauty = Math.min(100, state.beauty + item.power); if (item.type === 'makeup') state.isDirty = true; }
         state.inventory.splice(index, 1);
         saveGame(); renderInventory();
@@ -146,7 +162,7 @@
     function washHair() { state.lastWashTime = Date.now(); state.beauty = Math.min(100, state.beauty + 5); saveGame(); }
     function checkIn() {
         const today = new Date().toLocaleDateString();
-        if (state.lastCheckIn === today) alert("今天領過囉！");
+        if (state.lastCheckIn === today) alert("領過囉！");
         else { state.money += 100; state.lastCheckIn = today; saveGame(); updateUI("簽到成功！"); }
     }
     function saveDiary() { state.diaryContent = document.getElementById('diary-box').value; saveGame(); }
@@ -156,6 +172,7 @@
         document.getElementById('money').innerText = Math.floor(state.money);
         document.getElementById('beauty').innerText = Math.floor(state.beauty);
         document.getElementById('hunger').innerText = Math.floor(state.hunger);
+        document.getElementById('auto-count-display').innerText = state.autoRobots;
         if (msg) document.getElementById('status-display').innerText = msg;
         let hours = ((Date.now() - state.lastWashTime) / (1000 * 60 * 60)).toFixed(1);
         document.getElementById('last-wash-display').innerText = hours + " 小時前洗頭";
@@ -170,7 +187,7 @@
 
     function checkGift() {
         const area = document.getElementById('gift-area');
-        if (!state.hasReceivedGift) area.innerHTML = `<div style="background:#fff3f3; padding:15px; border:2px dashed #ff7675; text-align:center; margin-bottom:10px; border-radius:10px;">🎁 大禮包 <button onclick="receiveGift()" style="background:#ff7675">領取</button></div>`;
+        if (!state.hasReceivedGift) area.innerHTML = `<div style="background:#fff3f3; padding:15px; border:2px dashed #ff7675; text-align:center; margin-bottom:10px; border-radius:10px;">🎁 歡迎店長大禮包 <button onclick="receiveGift()" style="background:#ff7675">領取</button></div>`;
         else area.innerHTML = "";
     }
     function receiveGift() { state.money += 300; state.hasReceivedGift = true; checkGift(); saveGame(); }
@@ -180,7 +197,7 @@
         if (u === ADMIN_USER && p === ADMIN_PASS) {
             state.authorNote = document.getElementById('edit-note').value;
             document.getElementById('display-note').innerText = state.authorNote;
-            saveGame(); alert("成功！"); toggleAdmin();
+            saveGame(); alert("公告更新！"); toggleAdmin();
         } else alert("錯誤！");
     }
 
