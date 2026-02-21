@@ -1,55 +1,61 @@
-<!DOCTYPE html>
+<!DOCTYPE html><!DOCTYPE html>
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>我的開學整備站</title>
+    <title>我的數位聯絡簿</title>
     <style>
-        body { font-family: -apple-system, sans-serif; text-align: center; background: #f0fff4; padding: 20px; color: #333; }
-        .card { background: white; border: 3px solid #000; border-radius: 20px; padding: 20px; box-shadow: 8px 8px 0px #000; max-width: 350px; margin: auto; }
-        h1 { font-size: 1.5rem; margin-bottom: 10px; }
-        .status-btn { background: #ffea00; border: 2px solid #000; padding: 10px 20px; font-weight: bold; border-radius: 10px; cursor: pointer; margin: 10px 0; width: 100%; }
-        .info-box { display: none; text-align: left; background: #fffbe6; border: 1px dashed #000; padding: 10px; margin-top: 15px; font-size: 0.9rem; line-height: 1.6; }
+        body { font-family: sans-serif; background: ##fff0f5; padding: 20px; display: flex; justify-content: center; }
+        .container { background: white; width: 100%; max-width: 400px; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h2 { color: #1a73e8; text-align: center; }
+        textarea { width: 100%; height: 100px; padding: 10px; box-sizing: border-box; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; margin-bottom: 10px; }
+        button { width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .save-btn { background: #1a73e8; color: white; margin-bottom: 10px; }
+        .clear-btn { background: #ff4d4d; color: white; }
+        .status { text-align: center; color: #666; font-size: 14px; margin-top: 10px; }
     </style>
 </head>
 <body>
 
-<div class="card">
-    <h1>🎒 台北開學整備</h1>
-    <p>後天 (2/23) 06:30 準時起床！</p>
+<div class="container">
+    <h2>📅 課業記本</h2>
+    <p><b>今日作業與考試：</b></p>
+    <textarea id="homeworkInput" placeholder="例如：
+- 數學課本 P.10
+- 明天英文小考第一課
+- 帶泳衣"></textarea>
     
-    <button class="status-btn" onclick="showLayer('morning')">☀️ 早上保養清單</button>
-    <div id="morning" class="info-box">
-        <b>早上順序：</b><br>
-        1. 抗痘控油洗顏慕斯<br>
-        2. 雪芙蘭嫩白化妝水<br>
-        3. 噴霧 (Nature Face)<br>
-        4. Bioré 小蒼蘭防曬 (6:50 出門前)
-    </div>
-
-    <button class="status-btn" onclick="showLayer('night')">🌙 晚上保養清單</button>
-    <div id="night" class="info-box">
-        <b>晚上順序：</b><br>
-        1. 雪芙蘭卸妝水<br>
-        2. 洗顏慕斯<br>
-        3. 曼秀雷敦調理水<br>
-        4. 噴霧<br>
-        5. 可立信痘痘凝膠
-    </div>
-
-    <button class="status-btn" onclick="showLayer('taichung')">🍦 台中回憶錄</button>
-    <div id="taichung" class="info-box">
-        回味一下四天三夜的台中行...<br>
-        雖然要開學了，但美好的回憶都在！
-    </div>
+    <button class="save-btn" onclick="saveData()">💾 儲存內容</button>
+    <button class="clear-btn" onclick="clearData()">🗑️ 全部清除</button>
+    
+    <div id="statusMsg" class="status"></div>
 </div>
 
 <script>
-    function showLayer(id) {
-        // 先隱藏所有框
-        document.querySelectorAll('.info-box').forEach(el => el.style.display = 'none');
-        // 顯示點選的框
-        document.getElementById(id).style.display = 'block';
+    // 網頁開啟時，自動讀取之前存過的資料
+    window.onload = function() {
+        const savedData = localStorage.getItem('myHomework');
+        if (savedData) {
+            document.getElementById('homeworkInput').value = savedData;
+        }
+    };
+
+    // 儲存資料到手機瀏覽器
+    function saveData() {
+        const content = document.getElementById('homeworkInput').value;
+        localStorage.setItem('myHomework', content);
+        const msg = document.getElementById('statusMsg');
+        msg.innerText = "✅ 已儲存！下次打開還會在喔。";
+        setTimeout(() => msg.innerText = "", 2000);
+    }
+
+    // 清除所有資料
+    function clearData() {
+        if (confirm("確定要清除所有紀錄嗎？")) {
+            localStorage.removeItem('myHomework');
+            document.getElementById('homeworkInput').value = "";
+            document.getElementById('statusMsg').innerText = "🧹 已清空。";
+        }
     }
 </script>
 
