@@ -1,223 +1,185 @@
-<!DOCTYPE html>
+\<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>我的開學全能助手 7.0</title>
+    <title>會考戰士：神奇補給站 v1.4</title>
     <style>
-        :root { --poya-pink: #ff4757; --poya-blue: #3498db; --nav-bg: #2d3436; }
-        body { font-family: sans-serif; background: #f8f9fa; margin: 0; padding-bottom: 30px; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f4f9; padding: 20px; }
+        .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h1, h2 { color: #333; text-align: center; }
         
-        /* 頂部導覽列 */
-        .nav-bar { background: var(--nav-bg); padding: 10px; display: flex; justify-content: center; gap: 15px; position: sticky; top: 0; z-index: 1000; }
-        .nav-btn { background: #636e72; color: white; border: none; padding: 10px 20px; border-radius: 20px; cursor: pointer; font-weight: bold; }
-        .nav-btn.active { background: var(--poya-pink); }
-
-        .app-section { display: none; padding: 15px; }
-        .app-section.active { display: block; }
-
-        /* 商城數值樣式 */
-        .money-display { font-size: 1.8rem; color: #2ecc71; font-weight: bold; text-align: center; margin: 10px 0; }
-        .stats-row { display: flex; justify-content: space-around; margin-bottom: 15px; }
-        .stat-item { font-size: 0.8rem; font-weight: bold; background: #eee; padding: 5px 10px; border-radius: 12px; border: 1px solid #ddd; }
-
-        /* 簽到與打工按鈕 */
-        .daily-btn { background: #e67e22; color: white; border: none; padding: 12px; width: 100%; border-radius: 10px; font-weight: bold; margin-bottom: 10px; cursor: pointer; }
-        .daily-btn:disabled { background: #ccc; }
-        .work-btn { background: #f1c40f; color: #333; padding: 15px; width: 100%; border: none; border-radius: 12px; font-weight: bold; font-size: 1.1rem; box-shadow: 0 4px 0 #d4ac0d; margin-bottom: 20px; cursor: pointer; }
-
-        /* 商品列表 */
-        .tab-bar { display: flex; overflow-x: auto; padding: 10px 0; gap: 10px; border-bottom: 1px solid #eee; margin-bottom: 10px; }
-        .shop-tab { padding: 8px 15px; border-radius: 20px; border: none; background: #ddd; white-space: nowrap; font-size: 0.85rem; flex-shrink: 0; }
-        .shop-tab.active { background: var(--poya-blue); color: white; }
-        .shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .item-card { background: white; padding: 12px; border-radius: 12px; border: 1px solid #eee; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .item-card.special { border: 2px solid var(--poya-pink); background: #fffafa; }
-        .item-price { color: var(--poya-pink); font-weight: bold; margin: 5px 0; }
-
-        /* 背包樣式 */
-        .inventory-section { background: white; padding: 15px; border-radius: 12px; margin-top: 20px; border: 2px dashed var(--poya-blue); }
-        .bag-item { display: inline-flex; align-items: center; background: #e3f2fd; padding: 5px 10px; margin: 3px; border-radius: 5px; font-size: 0.8rem; border: 1px solid #b3e5fc; }
-        .use-btn { background: #2ecc71; color: white; border: none; padding: 2px 5px; border-radius: 4px; margin-left: 5px; cursor: pointer; }
+        /* 數值面板 */
+        .stats { display: flex; justify-content: space-around; background: #eee; padding: 15px; border-radius: 10px; margin-bottom: 20px; font-weight: bold; }
+        
+        /* 選單按鈕 */
+        .menu { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; justify-content: center; }
+        button { padding: 10px 15px; cursor: pointer; border: none; border-radius: 8px; background: #6c5ce7; color: white; transition: 0.3s; }
+        button:hover { background: #a29bfe; }
+        
+        .section { display: none; }
+        .active { display: block; }
+        
+        /* 商店項目 */
+        .item-card { border: 1px solid #ddd; padding: 12px; margin: 10px 0; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
+        .tag { font-size: 0.75em; padding: 2px 6px; border-radius: 4px; color: white; margin-left: 5px; }
+        .tag-skin { background: #55efc4; color: #000; } /* 純保養 */
+        .tag-makeup { background: #fd79a8; } /* 彩妝/需卸妝 */
+        
+        /* 狀態訊息 */
+        .status-msg { color: #e74c3c; font-weight: bold; text-align: center; height: 1.5em; margin-bottom: 10px; }
+        
+        /* 更新日誌彈窗 */
+        #updateModal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border: 2px solid #6c5ce7; border-radius: 10px; z-index: 1000; box-shadow: 0 0 20px rgba(0,0,0,0.5); width: 80%; }
+        #overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.3); z-index: 999; }
     </style>
 </head>
 <body>
 
-<div class="nav-bar">
-    <button id="navContact" class="nav-btn active" onclick="switchApp('contact')">📝 聯絡簿</button>
-    <button id="navShop" class="nav-btn" onclick="switchApp('shop')">🏪 數位寶雅</button>
-</div>
+<div class="container">
+    <h1>補給站總部</h1>
+    
+    <div id="status-display" class="status-msg">歡迎店長！</div>
 
-<div id="contactSec" class="app-section active">
-    <div style="background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-        <h3>📅 今日備忘錄</h3>
-        <p style="font-size:0.8rem; color:#666;">（輸入後會自動儲存至手機）</p>
-        <textarea id="memoInput" style="width:100%; height:350px; border-radius:10px; padding:15px; border:1px solid #ddd; box-sizing:border-box; font-size: 1rem; line-height:1.5; resize:none;" placeholder="在此輸入開學準備、作業清單..."></textarea>
+    <div class="stats">
+        <div>💰 金幣: <span id="money">500</span></div>
+        <div>✨ 顏值: <span id="beauty">80</span>/100</div>
+        <div>🍔 飽食: <span id="hunger">70</span>/100</div>
+    </div>
+
+    <div class="menu">
+        <button onclick="showSection('work')">打工賺錢</button>
+        <button onclick="showSection('diary')">聯絡簿</button>
+        <button onclick="showSection('shop')">商店</button>
+        <button onclick="toggleUpdateModal()">✨ 更新日誌</button>
+    </div>
+
+    <div id="work" class="section active" style="text-align:center; padding: 20px;">
+        <h3>努力打工中...</h3>
+        <button onclick="clickWork()" style="padding: 20px; font-size: 1.2em; background: #ff7675;">點擊賺取 10 金幣</button>
+    </div>
+
+    <div id="diary" class="section">
+        <h2>今日聯絡簿</h2>
+        <textarea id="diary-box" style="width:100%; height:100px;" placeholder="寫下心情..."></textarea>
+        <button onclick="alert('存檔成功！')">儲存備忘</button>
+    </div>
+
+    <div id="shop" class="section">
+        <h2>神奇商店</h2>
+        <div class="item-card">
+            <span>💄 魅惑口紅 <span class="tag tag-makeup">彩妝</span></span>
+            <button onclick="buy('口紅', 200, 15, true)">$200</button>
+        </div>
+        <div class="item-card">
+            <span>👁️ 大地色眼影盤 <span class="tag tag-makeup">彩妝</span></span>
+            <button onclick="buy('眼影', 300, 20, true)">$300</button>
+        </div>
+        <div class="item-card">
+            <span>✨ 惹我蜜粉 <span class="tag tag-makeup">化妝</span></span>
+            <button onclick="buy('蜜粉', 160, 10, true)">$160</button>
+        </div>
+        <div class="item-card">
+            <span>☀️ Bioré 防曬噴霧 <span class="tag tag-makeup">防曬</span></span>
+            <button onclick="buy('防曬', 180, 5, true)">$180</button>
+        </div>
+        <div class="item-card">
+            <span>🧪 曼秀雷敦調理水/化妝水 <span class="tag tag-skin">保養</span></span>
+            <button onclick="buy('保養水', 120, 8, false)">$120</button>
+        </div>
+        <div class="item-card">
+            <span>🌿 Nature Face 噴霧 <span class="tag tag-skin">保養</span></span>
+            <button onclick="buy('噴霧', 150, 8, false)">$150</button>
+        </div>
+        <div class="item-card">
+            <span>🧼 雪芙蘭卸妝水 (清潔妝容)</span>
+            <button onclick="buy('卸妝', 150, 0, false)">$150</button>
+        </div>
+        <div class="item-card">
+            <span>💊 可立信痘痘凝膠 (治痘專用)</span>
+            <button onclick="buy('痘痘膏', 200, 0, false)">$200</button>
+        </div>
     </div>
 </div>
 
-<div id="shopSec" class="app-section">
-    <div class="money-display">💰 $<span id="balance">0</span></div>
-    <div class="stats-row">
-        <div class="stat-item">✨ 顏值: <span id="beautyStat">0</span></div>
-        <div class="stat-item">🍔 飽食: <span id="fullStat">100</span></div>
-        <div class="stat-item">📈 秒產: $<span id="incomeVal">0</span></div>
-    </div>
-
-    <button id="dailyBtn" class="daily-btn" onclick="dailyCheckIn()">📅 每日簽到 (領 $500)</button>
-    <button class="work-btn" onclick="work()">🖐️ 努力打工賺錢 (+$10)</button>
-
-    <div class="tab-bar">
-        <button class="shop-tab active" onclick="setTab('保養')">🧼 臉部保養</button>
-        <button class="shop-tab" onclick="setTab('美妝')">💄 彩妝區</button>
-        <button class="shop-tab" onclick="setTab('食品')">🥤 零食飲品</button>
-        <button class="shop-tab" onclick="setTab('投資')">🏛️ 產金投資</button>
-    </div>
-    <div class="shop-grid" id="shopGrid"></div>
-
-    <div class="inventory-section">
-        <b>🎒 我的背包：</b>
-        <div id="bagDisplay" style="margin-top:10px; min-height: 30px;">空空的</div>
-    </div>
+<div id="overlay" onclick="toggleUpdateModal()"></div>
+<div id="updateModal">
+    <h3>🚀 v1.4 更新紀錄</h3>
+    <hr>
+    <ul>
+        <li>[正名] 將商店從「寶雅」改為通用名稱「商店」。</li>
+        <li>[新增] 彩妝系列：包含口紅、眼影盤。</li>
+        <li>[邏輯] 帶妝切換分頁有機率長痘，需用卸妝水預防或痘痘膏治療。</li>
+        <li>[修正] 數值上限固定為 100。</li>
+        <li>[優化] 加入更新日誌視窗功能。</li>
+    </ul>
+    <button onclick="toggleUpdateModal()">關閉</button>
 </div>
 
 <script>
-    // 1. 初始化資料 (讀取儲存)
-    let money = parseInt(localStorage.getItem('game_money')) || 0;
-    let autoIncome = parseInt(localStorage.getItem('game_income')) || 0;
-    let beauty = parseInt(localStorage.getItem('game_beauty')) || 0;
-    let fullness = parseInt(localStorage.getItem('game_fullness')) || 100;
-    let bag = JSON.parse(localStorage.getItem('game_bag')) || [];
-    let lastCheckIn = localStorage.getItem('last_checkin') || "";
-    let currentTab = '保養';
+    let money = 500;
+    let beauty = 80;
+    let hunger = 70;
+    let isDirty = false; // 是否帶妝
+    let hasAcne = false; // 是否有痘痘
+    const max = 100;
 
-    const products = {
-        '保養': [
-            { name: "雪芙蘭嫩白化妝水", price: 199, effect: { type: 'beauty', val: 5 } },
-            { name: "曼秀雷敦調理水", price: 220, effect: { type: 'beauty', val: 6 } },
-            { name: "抗痘控油洗顏慕斯", price: 180, effect: { type: 'beauty', val: 5 } },
-            { name: "Nature Face 噴霧", price: 150, effect: { type: 'beauty', val: 4 } },
-            { name: "雪芙蘭乳液", price: 250, effect: { type: 'beauty', val: 8 } },
-            { name: "可立信痘痘凝膠", price: 280, effect: { type: 'beauty', val: 10 } },
-            { name: "Bioré 小蒼蘭防曬", price: 280, effect: { type: 'beauty', val: 7 } }
-        ],
-        '美妝': [
-            { name: "惹我清爽蜜粉", price: 160, effect: { type: 'beauty', val: 15 } },
-            { name: "韓系口紅", price: 420, effect: { type: 'beauty', val: 25 } },
-            { name: "九宮格眼影盤", price: 580, effect: { type: 'beauty', val: 40 } },
-            { name: "開學大禮包", price: 223, effect: { type: 'beauty', val: 100 }, special: true }
-        ],
-        '食品': [
-            { name: "珍珠奶茶", price: 65, effect: { type: 'full', val: 25 } },
-            { name: "咔辣姆久", price: 45, effect: { type: 'full', val: 15 } },
-            { name: "辛拉麵", price: 160, effect: { type: 'full', val: 65 } },
-            { name: "午後紅茶", price: 45, effect: { type: 'full', val: 12 } }
-        ],
-        '投資': [
-            { name: "自動小助手", price: 1200, income: 10 },
-            { name: "數位寶雅分店", price: 10000, income: 100 },
-            { name: "宇宙物流中心", price: 50000, income: 600 }
-        ]
-    };
-
-    // 2. 切換應用程式
-    function switchApp(app) {
-        document.getElementById('contactSec').classList.toggle('active', app === 'contact');
-        document.getElementById('shopSec').classList.toggle('active', app === 'shop');
-        document.getElementById('navContact').classList.toggle('active', app === 'contact');
-        document.getElementById('navShop').classList.toggle('active', app === 'shop');
+    function showSection(id) {
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        if (isDirty) checkAcneRisk(); // 切換分頁時檢查卸妝
     }
 
-    // 3. 更新介面
-    function updateUI() {
-        document.getElementById('balance').innerText = money.toLocaleString();
-        document.getElementById('beautyStat').innerText = beauty;
-        document.getElementById('fullStat').innerText = Math.floor(fullness);
-        document.getElementById('incomeVal').innerText = autoIncome;
-
-        const grid = document.getElementById('shopGrid');
-        grid.innerHTML = '';
-        products[currentTab].forEach((p, idx) => {
-            const canAfford = money >= p.price;
-            grid.innerHTML += `
-                <div class="item-card ${p.special ? 'special' : ''}">
-                    <div style="font-weight:bold; font-size:0.85rem;">${p.name}</div>
-                    <div style="font-size:0.7rem; color:#666; margin:3px 0;">${p.income ? '+$'+p.income+'/秒' : '效果:+'+p.effect.val}</div>
-                    <div class="item-price">$${p.price}</div>
-                    <button class="buy-btn" ${canAfford ? '' : 'disabled'} onclick="buy('${currentTab}', ${idx})" style="background:${canAfford?'#3498db':'#ccc'}; color:white; border:none; padding:6px; border-radius:5px; cursor:pointer;">購買</button>
-                </div>
-            `;
-        });
-
-        const bagDiv = document.getElementById('bagDisplay');
-        bagDiv.innerHTML = bag.length ? '' : '空空的';
-        bag.forEach((item, idx) => {
-            bagDiv.innerHTML += `<span class="bag-item">${item.name}<button class="use-btn" onclick="use(${idx})">使用</button></span>`;
-        });
-
-        // 檢查簽到狀態
-        const today = new Date().toISOString().split('T')[0];
-        if (lastCheckIn === today) {
-            document.getElementById('dailyBtn').innerText = "✅ 今天已領過簽到獎勵";
-            document.getElementById('dailyBtn').disabled = true;
-        }
-        save();
+    function toggleUpdateModal() {
+        const m = document.getElementById('updateModal');
+        const o = document.getElementById('overlay');
+        const isShow = m.style.display === 'block';
+        m.style.display = isShow ? 'none' : 'block';
+        o.style.display = isShow ? 'none' : 'block';
     }
 
-    // 4. 功能邏輯
-    function dailyCheckIn() {
-        const today = new Date().toISOString().split('T')[0];
-        if (lastCheckIn !== today) {
-            money += 500;
-            lastCheckIn = today;
-            localStorage.setItem('last_checkin', lastCheckIn);
-            alert("✨ 簽到成功！獲得 $500 獎金！");
-            updateUI();
+    function clickWork() {
+        money += 10;
+        updateUI("努力打工賺到了 10 金幣！");
+    }
+
+    function buy(name, price, gain, makeup) {
+        if (money < price) { alert("金幣不足，快去打工！"); return; }
+        
+        if (name === '卸妝') {
+            money -= price; isDirty = false;
+            updateUI("卸妝完成，皮膚很清爽！");
+        } else if (name === '痘痘膏') {
+            if (hasAcne) {
+                money -= price; hasAcne = false;
+                beauty = Math.min(max, beauty + 15);
+                updateUI("擦了痘痘膏，紅腫消退了！");
+            } else { alert("臉上沒痘痘，不用擦藥喔。"); }
+        } else {
+            money -= price;
+            beauty = Math.min(max, beauty + gain);
+            if (makeup) isDirty = true;
+            updateUI("使用了 " + name + (makeup ? " (記得卸妝)" : ""));
         }
     }
 
-    function buy(tab, idx) {
-        const p = products[tab][idx];
-        if (money >= p.price) {
-            money -= p.price;
-            if (p.income) autoIncome += p.income;
-            else bag.push(p);
-            updateUI();
+    function checkAcneRisk() {
+        if (isDirty && Math.random() < 0.2) { // 20% 機率
+            hasAcne = true;
+            beauty = Math.max(0, beauty - 10);
+            document.getElementById('status-display').innerText = "⚠️ 妝沒卸乾淨，長痘痘了！";
         }
     }
 
-    function use(idx) {
-        const item = bag[idx];
-        if (item.effect.type === 'beauty') beauty += item.effect.val;
-        if (item.effect.type === 'full') fullness += item.effect.val;
-        bag.splice(idx, 1);
-        updateUI();
+    function updateUI(msg) {
+        document.getElementById('money').innerText = money;
+        document.getElementById('beauty').innerText = beauty;
+        document.getElementById('hunger').innerText = hunger;
+        if (msg) document.getElementById('status-display').innerText = msg;
+        if (hasAcne) document.getElementById('status-display').innerText += " [⚠️ 痘痘中]";
     }
 
-    function work() { money += 10; updateUI(); }
-    function setTab(t) { currentTab = t; updateUI(); }
-    function save() {
-        localStorage.setItem('game_money', money);
-        localStorage.setItem('game_income', autoIncome);
-        localStorage.setItem('game_beauty', beauty);
-        localStorage.setItem('game_fullness', fullness);
-        localStorage.setItem('game_bag', JSON.stringify(bag));
-    }
-
-    // 聯絡簿存檔邏輯
-    document.getElementById('memoInput').value = localStorage.getItem('my_memo') || "";
-    document.getElementById('memoInput').addEventListener('input', (e) => {
-        localStorage.setItem('my_memo', e.target.value);
-    });
-
-    // 5. 計時器：被動收入 & 飽食度下降
-    setInterval(() => {
-        money += autoIncome;
-        if (fullness > 0) fullness -= 0.05;
-        updateUI();
-    }, 1000);
-
-    updateUI();
+    updateUI(); // 初始更新
 </script>
+
 </body>
 </html>
