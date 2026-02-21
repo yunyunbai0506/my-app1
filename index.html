@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>我的專屬程式</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; padding-top: 50px; background-color: #f0f8ff; }
+        .card { border: 2px solid #333; display: inline-block; padding: 20px; border-radius: 15px; background: white; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>🚀 程式啟動成功！</h1>
+        <p id="message">這是我的第一個逼卡程式。</p>
+        <button onclick="changeText()">點我試試</button>
+    </div>
+
+    <script>
+        function changeText() {
+            const hints = ["記得擦化妝水！", "今天心情如何？", "歡迎回到台北！", "又是新的一天"];
+            const random = hints[Math.floor(Math.random() * hints.length)];
+            document.getElementById("message").innerText = random;
+        }
+    </script>
+</body>
+</html>
